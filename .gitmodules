@@ -1,3 +1,0 @@
-[submodule "pefile"]
-	path = pefile
-	url = https://github.com/erocarrera/pefile.git
