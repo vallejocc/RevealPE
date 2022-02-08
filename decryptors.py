@@ -24,9 +24,9 @@ class Decryptors:
     ################################################################
     
     def xor1forward(self, buf, key, inc):
-        bufout = ""
+        bufout = b""
         for i in range(0, len(buf)):
-            bufout += chr(ord(buf[i])^key)
+            bufout += (buf[i]^key).to_bytes(1, 'little')
             key += inc
             key &= 0xff
         return bufout
@@ -36,8 +36,8 @@ class Decryptors:
         return self.xor1forward(buf, key, inc)
 
     def xor4forward(self, buf, key, inc):
-        bufout = ""
-        for i in range(0,len(buf)/4):
+        bufout = b""
+        for i in range(0,int(len(buf)/4)):
             v = struct.unpack("=L", buf[i*4:(i*4)+4])[0]
             v ^= key
             bufout += struct.pack("=L", v)
@@ -47,13 +47,13 @@ class Decryptors:
     
     def xor4backward(self, buf, key, inc):
         buf = buf[len(buf)%4:]
-        key = (key - ((len(buf)/4)*inc))&0xffffffff
+        key = (key - (int(len(buf)/4)*inc))&0xffffffff
         return self.xor4forward(buf, key, inc)
         
     def add1forward(self, buf, key, inc):
-        bufout = ""
+        bufout = b""
         for i in range(0, len(buf)):
-            bufout += chr((ord(buf[i])+key)&0xff)
+            bufout += ((buf[i]+key)&0xff).to_bytes(1, 'little')
             key += inc
             key &= 0xff
         return bufout
@@ -63,8 +63,8 @@ class Decryptors:
         return self.add1forward(buf, key, inc)
         
     def add4forward(self, buf, key, inc):
-        bufout = ""
-        for i in range(0,len(buf)/4):            
+        bufout = b""
+        for i in range(0,int(len(buf)/4)):            
             v = struct.unpack("=L", buf[i*4:(i*4)+4])[0]            
             v += key
             v &= 0xffffffff        
@@ -75,18 +75,18 @@ class Decryptors:
     
     def add4backward(self, buf, key, inc):
         buf = buf[len(buf)%4:]
-        key = (key - ((len(buf)/4)*inc))&0xffffffff
+        key = (key - (int(len(buf)/4)*inc))&0xffffffff
         return self.add4forward(buf, key, inc)
 
     ################################################################
     
     def decryptVigenere(self, buf, sustTableVal, sustTableSet):
-        bufout = ""
+        bufout = b""
         for e in buf:
-            if sustTableSet[ord(e)]: bufout += chr(sustTableVal[ord(e)])
-            else: bufout += "\0"
+            if sustTableSet[e]: bufout += sustTableVal[e].to_bytes(1, 'little')
+            else: bufout += b"\0"
         return bufout
-    
+
     ################################################################
     
     def decrypt(self, buf, pos, n, alg, key, inc = 0, direction = "forward"):
@@ -186,7 +186,7 @@ def doWork(target, pos, n, alg, key, inc, direction):
 
 if __name__ == "__main__":
     #decryptors.py <pos> <n> <alg> <key> <inc> <direction> <target> <ext>
-    print sys.argv
+    print(sys.argv)
     try: pos = int(sys.argv[1], 10)
     except: pos = int(sys.argv[1], 16)
     try: n = int(sys.argv[2], 10)
@@ -196,24 +196,24 @@ if __name__ == "__main__":
     try: inc = int(sys.argv[5], 10)
     except: inc = int(sys.argv[5], 16)
 
-    print "pos %x n %x alg %s key %x inc %x direction %s" % (pos, n, sys.argv[3], key, inc, sys.argv[6])
-    
+    print("pos %x n %x alg %s key %x inc %x direction %s" % (pos, n, sys.argv[3], key, inc, sys.argv[6]))
+
     if not os.path.isdir(sys.argv[7]):
         sout = doWork(sys.argv[7], pos, n, sys.argv[3], key, inc, sys.argv[6])
-        print len(sout)
+        print(len(sout))
         f = open(sys.argv[7]+".dec", "wb")
         f.write(sout)
         f.close()
     else:
         for e in recurfiles(sys.argv[7]):
             if sys.argv[8] in e:
-                print "decryptor: Decrypting %s..." % e
-                print "--------------------"
+                print("decryptor: Decrypting %s..." % e)
+                print("--------------------")
                 sout = doWork(e, pos, n, sys.argv[3], key, inc, sys.argv[6])
                 f = open(e+".dec", "wb")
                 f.write(sout)
                 f.close()                
-                print "decryptor: End"
-                print "--------------------"
+                print("decryptor: End")
+                print("--------------------")
 
 ####################################################################

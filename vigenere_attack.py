@@ -28,7 +28,7 @@ class UnknownVigenereEncryptedPESearcher:
       
     def __init__(self, content):        
         
-        self.content = content + ("\0"*0x500)
+        self.content = content + (b"\0"*0x500)
         self.curpos = -1
         self.curPE = -1
         self.curPEmatchingSignature = -1
@@ -52,10 +52,10 @@ class UnknownVigenereEncryptedPESearcher:
         ]
         
         self.kwownPlaintextSignature1 = [
-            [0x00, "MZ"], 
+            [0x00, b"MZ"], 
             #[0x0c, "\xff"], 
-            [0x0e, "\0"], 
-            [0x4e, "This program cannot be run in DOS mode"]
+            [0x0e, b"\0"], 
+            [0x4e, b"This program cannot be run in DOS mode"]
         ]
         
         self.distanceSignature2 = [ #This program must be run under Win32
@@ -67,10 +67,10 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSignature2 = [
-            [0x00, "MZ"], 
+            [0x00, b"MZ"], 
             #[0x0c, "\xff"], 
-            [0x0e, "\0"], 
-            [0x50, "This program must be run under Win32"]
+            [0x0e, b"\0"], 
+            [0x50, b"This program must be run under Win32"]
         ]
         
         self.distanceSignatures = [
@@ -99,7 +99,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature1 = [
-            [0x00, "GetProcAddress"]
+            [0x00, b"GetProcAddress"]
         ]
         
         self.distanceSecondarySignature2 = [ #LoadLibrary
@@ -109,7 +109,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature2 = [
-            [0x00, "LoadLibrary"]
+            [0x00, b"LoadLibrary"]
         ]        
 
         self.distanceSecondarySignature3 = [ #GetLastError
@@ -118,7 +118,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature3 = [
-            [0x00, "GetLastError"]
+            [0x00, b"GetLastError"]
         ]
 
         self.distanceSecondarySignature4 = [ #CreateToolhelp32Snapshot
@@ -130,7 +130,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature4 = [
-            [0x00, "CreateToolhelp32Snapshot"]
+            [0x00, b"CreateToolhelp32Snapshot"]
         ]
 
         self.distanceSecondarySignature5 = [ #GetCurrentThreadId
@@ -141,7 +141,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature5 = [
-            [0x00, "GetCurrentThreadId"]
+            [0x00, b"GetCurrentThreadId"]
         ]
 
         self.distanceSecondarySignature6 = [ #GetCurrentProcessId
@@ -152,7 +152,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature6 = [
-            [0x00, "GetCurrentProcessId"]
+            [0x00, b"GetCurrentProcessId"]
         ]
 
         self.distanceSecondarySignature7 = [ #UnhandledExceptionFilter
@@ -163,7 +163,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature7 = [
-            [0x00, "UnhandledExceptionFilter"]
+            [0x00, b"UnhandledExceptionFilter"]
         ]
 
         self.distanceSecondarySignature8 = [ #GetModuleHandle
@@ -173,7 +173,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature8 = [
-            [0x00, "GetModuleHandle"]
+            [0x00, b"GetModuleHandle"]
         ]
 
         self.distanceSecondarySignature9 = [ #GetModuleFileName
@@ -182,7 +182,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature9 = [
-            [0x00, "GetModuleFileName"]
+            [0x00, b"GetModuleFileName"]
         ]
 
         self.distanceSecondarySignature10 = [ #IsDebuggerPresent
@@ -192,7 +192,7 @@ class UnknownVigenereEncryptedPESearcher:
         ]
 
         self.kwownPlaintextSecondarySignature10 = [
-            [0x00, "IsDebuggerPresent"]
+            [0x00, b"IsDebuggerPresent"]
         ]
 
         self.distanceSecondarySignatures = [
@@ -238,8 +238,8 @@ class UnknownVigenereEncryptedPESearcher:
             plainlen = len(e[1])
             crypttxt = self.content[pos+plainoff:pos+plainoff+plainlen]
             for i in range(0, plainlen):
-                if self.curSustTableSet[ord(plaintxt[i])] == True:
-                    if self.curSustTableVal[ord(plaintxt[i])] != ord(crypttxt[i]):
+                if self.curSustTableSet[plaintxt[i]] == True:
+                    if self.curSustTableVal[plaintxt[i]] != crypttxt[i]:
                         return False
         return True
             
@@ -247,25 +247,25 @@ class UnknownVigenereEncryptedPESearcher:
     
     def gatherSustitutions(self, knownPlaintext, pos):
         for e in knownPlaintext:
-            print "vigenere_attack: Gathering sustitutions for %s / pos %x / pos from pe %x" % (repr(e[1]), pos+e[0], pos-self.curPE++e[0])
+            print("vigenere_attack: Gathering sustitutions for %s / pos %x / pos from pe %x" % (repr(e[1]), pos+e[0], pos-self.curPE++e[0]))
             plainoff = e[0]
             plaintxt = e[1]
             plainlen = len(e[1])
             crypttxt = self.content[pos+plainoff:pos+plainoff+plainlen]
             for i in range(0, plainlen):
-                self.curSustTableVal[ord(plaintxt[i])] = ord(crypttxt[i])
-                self.curReverseSustTableVal[ord(crypttxt[i])] = ord(plaintxt[i])
-                self.curSustTableSet[ord(plaintxt[i])] = True
-                self.curReverseSustTableSet[ord(crypttxt[i])] = True
-        
+                self.curSustTableVal[plaintxt[i]] = crypttxt[i]
+                self.curReverseSustTableVal[crypttxt[i]] = plaintxt[i]
+                self.curSustTableSet[plaintxt[i]] = True
+                self.curReverseSustTableSet[crypttxt[i]] = True
+
     ################################################################
-    
+
     def secondStageSustitutionsGathering(self, pos):
         while not self.isEnd(pos):
             isig = self.posMatchSignature(signatureindex = None, pos = pos, paramDistanceSignatures = self.distanceSecondarySignatures)
             if isig != None and not self.isPlaintext(knownPlaintext = self.knownSecondaryPlaintexts[isig], pos = pos):
                 if self.isCoherentWithPreviousGatheredSustitutions(knownPlaintext = self.knownSecondaryPlaintexts[isig], pos = pos):              
-                    print "vigenere_attack: : Coherent sustitutions found"
+                    print("vigenere_attack: : Coherent sustitutions found")
                     self.gatherSustitutions(knownPlaintext = self.knownSecondaryPlaintexts[isig], pos = pos)
                 else:
                     #print "vigenere_attack: Not coherent sustitutions found"
@@ -369,8 +369,8 @@ class UnknownVigenereEncryptedPESearcher:
     @staticmethod
     def WellknownVigenereBruteforce(plaintxt, crypttxt):
         lout = []
-        p0 = ord(plaintxt[0])
-        c0 = ord(crypttxt[0])
+        p0 = plaintxt[0]
+        c0 = crypttxt[0]
         bfound=False
         for i in range(0,0x100):
             for j in range(0,0x100):
@@ -378,37 +378,37 @@ class UnknownVigenereEncryptedPESearcher:
                     if UnknownVigenereEncryptedPESearcher.XOR_ADD_ROL(p0, i, j, k)==c0:
                         bfound=True
                         for n in range(0,len(plaintxt)):
-                            if UnknownVigenereEncryptedPESearcher.XOR_ADD_ROL(ord(plaintxt[n]), i, j, k)!=ord(crypttxt[n]):
+                            if UnknownVigenereEncryptedPESearcher.XOR_ADD_ROL(plaintxt[n], i, j, k)!=crypttxt[n]:
                                 bfound=False
                         if bfound: lout.append((UnknownVigenereEncryptedPESearcher.XOR_ADD_ROL, i, j, k))
                     if UnknownVigenereEncryptedPESearcher.ADD_XOR_ROL(p0, i, j, k)==c0:
                         bfound=True
                         for n in range(0,len(plaintxt)):
-                            if UnknownVigenereEncryptedPESearcher.ADD_XOR_ROL(ord(plaintxt[n]), i, j, k)!=ord(crypttxt[n]):
+                            if UnknownVigenereEncryptedPESearcher.ADD_XOR_ROL(plaintxt[n], i, j, k)!=crypttxt[n]:
                                 bfound=False
                         if bfound: lout.append((UnknownVigenereEncryptedPESearcher.ADD_XOR_ROL, i, j, k))
                     if UnknownVigenereEncryptedPESearcher.XOR_ROL_ADD(p0, i, j, k)==c0:
                         bfound=True
                         for n in range(0,len(plaintxt)):
-                            if UnknownVigenereEncryptedPESearcher.XOR_ROL_ADD(ord(plaintxt[n]), i, j, k)!=ord(crypttxt[n]):
+                            if UnknownVigenereEncryptedPESearcher.XOR_ROL_ADD(plaintxt[n], i, j, k)!=crypttxt[n]:
                                 bfound=False
                         if bfound: lout.append((UnknownVigenereEncryptedPESearcher.XOR_ROL_ADD, i, j, k))
                     if UnknownVigenereEncryptedPESearcher.ROL_XOR_ADD(p0, i, j, k)==c0:
                         bfound=True
                         for n in range(0,len(plaintxt)):
-                            if UnknownVigenereEncryptedPESearcher.ROL_XOR_ADD(ord(plaintxt[n]), i, j, k)!=ord(crypttxt[n]):
+                            if UnknownVigenereEncryptedPESearcher.ROL_XOR_ADD(plaintxt[n], i, j, k)!=crypttxt[n]:
                                 bfound=False
                         if bfound: lout.append((UnknownVigenereEncryptedPESearcher.ROL_XOR_ADD, i, j, k))
                     if UnknownVigenereEncryptedPESearcher.ADD_ROL_XOR(p0, i, j, k)==c0:
                         bfound=True
                         for n in range(0,len(plaintxt)):
-                            if UnknownVigenereEncryptedPESearcher.ADD_ROL_XOR(ord(plaintxt[n]), i, j, k)!=ord(crypttxt[n]):
+                            if UnknownVigenereEncryptedPESearcher.ADD_ROL_XOR(plaintxt[n], i, j, k)!=crypttxt[n]:
                                 bfound=False
                         if bfound: lout.append((UnknownVigenereEncryptedPESearcher.ADD_ROL_XOR, i, j, k))
                     if UnknownVigenereEncryptedPESearcher.ROL_ADD_XOR(p0, i, j, k)==c0:
                         bfound=True
                         for n in range(0,len(plaintxt)):
-                            if UnknownVigenereEncryptedPESearcher.ROL_ADD_XOR(ord(plaintxt[n]), i, j, k)!=ord(crypttxt[n]):
+                            if UnknownVigenereEncryptedPESearcher.ROL_ADD_XOR(plaintxt[n], i, j, k)!=crypttxt[n]:
                                 bfound=False
                         if bfound: lout.append((UnknownVigenereEncryptedPESearcher.ROL_ADD_XOR, i, j, k))
         return lout
@@ -418,20 +418,20 @@ class UnknownVigenereEncryptedPESearcher:
     @staticmethod
     def WellknownVigenereBruteforceFromSustTable(sustTableVal, sustTableSet):
         lout=[]
-        p=""
-        c=""
+        p=b""
+        c=b""
         for i in range(0, len(sustTableVal)):
             if sustTableSet[i]:
-                p+=chr(i)
-                c+=chr(sustTableVal[i])
-        print "WellknownVigenereBruteforceFromSustTable: %s %s" % (p, c)
+                p+=i.to_bytes(1, 'little')
+                c+=sustTableVal[i].to_bytes(1, 'little')
+        print("WellknownVigenereBruteforceFromSustTable: %s %s" % (p, c))
         encryptors = UnknownVigenereEncryptedPESearcher.WellknownVigenereBruteforce(p, c)        
         if not len(encryptors):
-            print "WellknownVigenereBruteforceFromSustTable: encryptor not found"
+            print("WellknownVigenereBruteforceFromSustTable: encryptor not found")
             return None        
         for encryptor in encryptors:
-            print "WellknownVigenereBruteforceFromSustTable: encryptor found, calculating new sustitution table"
-            print repr(encryptor)
+            print("WellknownVigenereBruteforceFromSustTable: encryptor found, calculating new sustitution table")
+            print(repr(encryptor))
             newSustTableVal = [0 for x in range(0x100)]
             newSustTableSet = [True for x in range(0x100)]
             newReverseSustTableVal = [0 for x in range(0x100)]
@@ -497,12 +497,12 @@ def doWork(target, onlyfirstPEfound = True):
             if onlyfirstPEfound:
                 return (None, None, None)
             break
-        print "vigenere_attack: PE at pos: %x" % vg.curPE
-        print "vigenere_attack: Sust table:" 
+        print("vigenere_attack: PE at pos: %x" % vg.curPE)
+        print("vigenere_attack: Sust table:")
         for i in range(0, len(vg.curSustTableVal)):
             if vg.curSustTableSet[i]:
-                print "vigenere_attack: %c - %02x - %02x - %c" % (chr(i), i, vg.curSustTableVal[i], chr(vg.curSustTableVal[i]))
-        print "vigenere_attack: bruteforcing wellknown algorithms"
+                print("vigenere_attack: %c - %02x - %02x - %c" % (chr(i), i, vg.curSustTableVal[i], chr(vg.curSustTableVal[i])))
+        print("vigenere_attack: bruteforcing wellknown algorithms")
         newTables = UnknownVigenereEncryptedPESearcher.WellknownVigenereBruteforceFromSustTable(vg.curSustTableVal, vg.curSustTableSet)
         if not newTables or not len(newTables):
             lout.append((vg.curPE, vg.curReverseSustTableVal, vg.curReverseSustTableSet))
@@ -526,10 +526,10 @@ if __name__ == "__main__":
     else:
         for e in recurfiles(sys.argv[1]):
             if sys.argv[2] in e:
-                print "vigenere_attack: Analyzing %s..." % e
-                print "vigenere_attack: --------------------"
+                print("vigenere_attack: Analyzing %s..." % e)
+                print("vigenere_attack: --------------------")
                 doWork(e)
-                print "vigenere_attack: End"
-                print "vigenere_attack: --------------------"
+                print("vigenere_attack: End")
+                print("vigenere_attack: --------------------")
 
 ####################################################################

@@ -30,21 +30,21 @@ class XorAddAttacks:
     ################################################################
         
     def xor(self, a, b):
-        sout = ""
+        sout = b""
         for i in range(0, len(a)):
-            sout += (chr(ord(a[i])^ord(b[i])))
+            sout += (a[i]^b[i]).to_bytes(1, 'little')
         return sout
     
     def sub(self, a, b):
-        sout = ""
+        sout = b""
         for i in range(0, len(a)):
-            sout += (chr((ord(b[i])-ord(a[i]))&0xff))
+            sout += ((b[i]-a[i])&0xff).to_bytes(1, 'little')
         return sout
             
     def calcincs(self, a):        
-        sout = ""
+        sout = b""
         for i in range(0, len(a)-1):
-            sout += chr((ord(a[i+1])-ord(a[i]))&0xff)
+            sout += ((a[i+1]-a[i])&0xff).to_bytes(1, 'little')
         return sout
 
     def issameval(self, a):
@@ -56,7 +56,7 @@ class XorAddAttacks:
 
     def xor4(self, a, b):
         lout = []
-        for i in range(0, len(a)/4):
+        for i in range(0, int(len(a)/4)):
             va = struct.unpack("=L", a[i*4:(i*4)+4])[0]
             vb = struct.unpack("=L", b[i*4:(i*4)+4])[0]
             vxor = va^vb
@@ -65,7 +65,7 @@ class XorAddAttacks:
     
     def sub4(self, a, b):
         lout = []
-        for i in range(0, len(a)/4):
+        for i in range(0, int(len(a)/4)):
             va = struct.unpack("=L", a[i*4:(i*4)+4])[0]
             vb = struct.unpack("=L", b[i*4:(i*4)+4])[0]
             vsub = (vb-va)&0xffffffff
@@ -118,26 +118,26 @@ class XorAddAttacks:
             subedincsameval4 = self.issameval4(subedincs4)
             
             if self.xor1enabled and self.noincsenabled and xoredsameval!=None:
-                key = ord(xoredsameval)
+                key = xoredsameval
                 inc = 0
                 alg = "XOR1"
                 results.append((alg, key, inc))
 
             if self.add1enabled and self.noincsenabled and subedsameval!=None:
-                key = (-ord(subedsameval))&0xff
+                key = (-subedsameval)&0xff
                 inc = 0
                 alg = "ADD1"
                 results.append((alg, key, inc))
 
             if self.xor1enabled and self.incsenabled and xoredincsameval!=None:
-                key = ord(xored[0])
-                inc = ord(xoredincsameval)
+                key = xored[0]
+                inc = xoredincsameval
                 alg = "XOR1"
                 results.append((alg, key, inc))
 
             if self.add1enabled and self.incsenabled and subedincsameval!=None:
-                key = (-ord(subed[0]))&0xff
-                inc = (-ord(subedincsameval))&0xff
+                key = (-subed[0])&0xff
+                inc = (-subedincsameval)&0xff
                 alg = "ADD1"
                 results.append((alg, key, inc))
             
@@ -170,14 +170,14 @@ class XorAddAttacks:
     ################################################################
             
     def GenericAttack(self, crypttxt, plaintxt):
-        
+
         if len(plaintxt)>=12:
-        
-            print "xoradd_attack: len crypttxt %x" % len(crypttxt)
-            print "xoradd_attack: len plaintxt %x plaintxt %s" % (len(plaintxt), repr(plaintxt))
-            
+
+            print("xoradd_attack: len crypttxt %x" % len(crypttxt))
+            print("xoradd_attack: len plaintxt %x plaintxt %s" % (len(plaintxt), repr(plaintxt)))
+
             shortplaintxt = plaintxt[0:12]
-            
+
             for i in range(0, len(crypttxt)-len(plaintxt)):                
                 #optimization: firstly, try with the shorter plaintxt necessary
                 l = self.GenericAttackFixedPos(crypttxt[i:i+len(shortplaintxt)], shortplaintxt)
@@ -186,9 +186,9 @@ class XorAddAttacks:
                     l = self.GenericAttackFixedPos(crypttxt[i:i+len(plaintxt)], plaintxt)
                     if len(l):
                         return i, l
-                            
+
         return None, None
-                
+
     ################################################################
     
 ####################################################################
@@ -248,9 +248,9 @@ def doWork(target, plaintxt, benable1byte = True, benable4byte = True, benablein
             alg = e[0]
             key = e[1]
             inc = e[2]
-            print "xoradd_attack: Encrypted plaintext found at pos %x algorithm %s key %x inc %x" % (pos, alg, key, inc)
+            print("xoradd_attack: Encrypted plaintext found at pos %x algorithm %s key %x inc %x" % (pos, alg, key, inc))
     else:
-        print "xoradd_attack: Encrypted plaintext not found"
+        print("xoradd_attack: Encrypted plaintext not found")
     return pos, l
 
 ####################################################################
@@ -266,10 +266,10 @@ if __name__ == "__main__":
     else:
         for e in recurfiles(sys.argv[2]):
             if sys.argv[3] in e:
-                print "xoradd_attack: Analyzing %s..." % e
-                print "--------------------"
+                print("xoradd_attack: Analyzing %s..." % e)
+                print("--------------------")
                 doWork(e, plaintxt)
-                print "xoradd_attack: End"
-                print "--------------------"
+                print("xoradd_attack: End")
+                print("--------------------")
 
 ####################################################################

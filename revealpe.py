@@ -53,18 +53,18 @@ def doExtractPE(deccontent, pos, n):
 def doWorkDecrypt(content, pos, alg, key, inc, extractpebackrange):    
     if alg.lower() != "noenc":        
         if alg.lower() == "vigenere":
-            print "revealpe: doWorkDecrypt: decrypting %x %s" % (pos, alg)
+            print("revealpe: doWorkDecrypt: decrypting %x %s" % (pos, alg))
             deccontent = decryptors.doWork(content, pos, len(content), alg, key, inc, "forward")
             pe = deccontent[pos:]
             return deccontent, pe
         else:
-            print "revealpe: doWorkDecrypt: decrypting %x %s %x %x" % (pos, alg, key, inc)
+            print("revealpe: doWorkDecrypt: decrypting %x %s %x %x" % (pos, alg, key, inc))
             deccontent = decryptors.doWork(content, pos, len(content), alg, key, inc, "forward")
             deccontent = decryptors.doWork(deccontent, pos, len(content), alg, key, inc, "backward")
             pe = doExtractPE(deccontent, pos, extractpebackrange)
             return deccontent, pe
     else:
-        print "revealpe: doWorkDecrypt: noenc"
+        print("revealpe: doWorkDecrypt: noenc")
         return None, None
 
 ####################################################################
@@ -93,10 +93,10 @@ def doWorkPESearch(target):
     unalignedplaintxts = []
     
     owndir = os.path.dirname(os.path.abspath(__file__))
-    f = open("%s/peplain.txt" % owndir, "rb")
+    f = open("%s/peplain.txt" % owndir, "r")
     plaintxts = map(str.strip, f.readlines())
     f.close()
-    f = open("%s/unalignedpeplain.txt" % owndir, "rb")
+    f = open("%s/unalignedpeplain.txt" % owndir, "r")
     unalignedplaintxts = map(str.strip, f.readlines())
     f.close()
 
@@ -111,42 +111,42 @@ def doWorkPESearch(target):
     
     #ATTACK1: xor/add 1/4 byte with or without key inc, using wellknown pe header texts (plaintext aligned to 4 from MZ)
     if not gnocheckaligned:
-        print "revealpe: doWorkPESearch: check aligned"
+        print("revealpe: doWorkPESearch: check aligned")
         for plaintxt in plaintxts:
-            print "revealpe: doWorkPESearch: searching for plaintxt: %s" % plaintxt
-            pos, l = xoradd_attack.doWork(content, plaintxt, benable1byte = True, benable4byte = True, benableincs = True, benablenoincs = True)
+            print("revealpe: doWorkPESearch: searching for plaintxt: %s" % plaintxt)
+            pos, l = xoradd_attack.doWork(content, plaintxt.encode(), benable1byte = True, benable4byte = True, benableincs = True, benablenoincs = True)
             if l and len(l):
-                print "revealpe: doWorkPESearch: plaintxt found"                
+                print("revealpe: doWorkPESearch: plaintxt found")
                 for e in l:
                     alg = e[0]
                     key = e[1]
                     inc = e[2]                    
                     deccontent, pe = doWorkDecrypt(content, pos, alg, key, inc, 0x100)
                     if pe:
-                        print "revealpe: doWorkPESearch: aligned, pe found"
+                        print("revealpe: doWorkPESearch: aligned, pe found")
                         lpes.append((pe, pos, alg, key, inc))
                     if deccontent:
-                        print "revealpe: doWorkPESearch: aligned, decrypted content found"
+                        print("revealpe: doWorkPESearch: aligned, decrypted content found")
                         ldeccontents.append((deccontent, pos, alg, key, inc))
     
     #ATTACK2: xor/add 1/4 byte with or without key inc, using wellknown pe header texts (check all alignments)
     if gcheckunaligned:
-        print "revealpe: doWorkPESearch: check unaligned"
+        print("revealpe: doWorkPESearch: check unaligned")
         for unalignedplaintxt in unalignedplaintxts:
-            print "revealpe: doWorkPESearch: searching for plaintxt: %s" % unalignedplaintxt
-            pos, l = xoradd_attack.doWork(content, unalignedplaintxt, benable1byte = True, benable4byte = True, benableincs = True, benablenoincs = True)
+            print("revealpe: doWorkPESearch: searching for plaintxt: %s" % unalignedplaintxt)
+            pos, l = xoradd_attack.doWork(content, unalignedplaintxt.encode(), benable1byte = True, benable4byte = True, benableincs = True, benablenoincs = True)
             if l and len(l):
-                print "revealpe: doWorkPESearch: plaintxt found"
+                print("revealpe: doWorkPESearch: plaintxt found")
                 for e in l:
                     alg = e[0]
                     key = e[1]
                     inc = e[2]                    
                     deccontent, pe = doWorkDecrypt(content, pos, alg, key, inc, 0x100)
                     if pe:
-                        print "revealpe: doWorkPESearch: unaligned, pe found"
+                        print("revealpe: doWorkPESearch: unaligned, pe found")
                         lpes.append((pe, pos, alg, key, inc))
                     if deccontent:
-                        print "revealpe: doWorkPESearch: unaligned, decrypted content found"
+                        print("revealpe: doWorkPESearch: unaligned, decrypted content found")
                         ldeccontents.append((deccontent, pos, alg, key, inc))
         
     ##ATTACK3: xor/add 1/4 byte with or without key inc, using zeros and decrypting from different alignments
@@ -154,21 +154,21 @@ def doWorkPESearch(target):
     
     ##ATTACK4: vigenere attack
     if not gnovigenere:
-        print "revealpe: doWorkPESearch: vigenere"
+        print("revealpe: doWorkPESearch: vigenere")
         key = 0
         inc = 0
         for res in vigenere_attack.doWork(content, onlyfirstPEfound = False):
             pos = res[0]
             sustTableVal = res[1]
             sustTableSet = res[2]
-            print "revealpe: doWorkPESearch: pe found at %x" % pos
+            print("revealpe: doWorkPESearch: pe found at %x" % pos)
             alg = "vigenere"
             deccontent, pe = doWorkDecrypt(content, pos, alg, sustTableVal, sustTableSet, 0)
             if pe:
-                print "revealpe: doWorkPESearch: vigenere, pe found"
+                print("revealpe: doWorkPESearch: vigenere, pe found")
                 lpes.append((pe, pos, alg, key, 0))
             if deccontent:
-                print "revealpe: doWorkPESearch: unaligned, decrypted content found"
+                print("revealpe: doWorkPESearch: unaligned, decrypted content found")
                 ldeccontents.append((deccontent, pos, alg, key, 0))
             key+=1
     
@@ -226,10 +226,10 @@ def doWorkRawSearch(target, plaintxt):
     
     while pendingAlignments:
         #ATTACK: xor/add 1/4 byte with or without key inc, using given plaintext
-        print "revealpe: doWorkRawSearch: searching for plaintxt: %s" % plaintxt
+        print("revealpe: doWorkRawSearch: searching for plaintxt: %s" % plaintxt)
         pos, l = xoradd_attack.doWork(content, plaintxt, benable1byte = True, benable4byte = True, benableincs = True, benablenoincs = True)
         if l and len(l):
-            print "revealpe: doWorkRawSearch: plaintxt found"
+            print("revealpe: doWorkRawSearch: plaintxt found")
             for e in l:
                 alg = e[0]
                 key = e[1]
@@ -279,7 +279,7 @@ def doWork(sys_argv):
     
     for i in range(0, len(sys_argv)):
         if "--help" in sys_argv[i]:
-            print """
+            print("""
             
             This tool searchs for PE headers encrypted with simple encryption 
             algorithms usually used by packers and malware. Under some 
@@ -324,7 +324,7 @@ def doWork(sys_argv):
                 disabled).
                 --log: specify a file to write results log.
                 
-            """
+            """)
             return
     
     for i in range(0, len(sys_argv)):
@@ -340,37 +340,39 @@ def doWork(sys_argv):
             glog = sys_argv[i+1]
     
     if glog: 
-        flog = open(glog, "w+b")
+        flog = open(glog, "w+")
         sys.stdout = flog
     
-    print "revealpe start"
+    print("revealpe start")
     if os.path.exists(sys_argv[1]):
         if not os.path.isdir(sys_argv[1]):
-            print "revealpe: Analyzing %s" % sys_argv[1]
-            print "--------------------------------------------------------------------------------"
+            print("revealpe: Analyzing %s" % sys_argv[1])
+            print("--------------------------------------------------------------------------------")
             try:
                 if not gplaintext: doWorkPESearch(sys_argv[1])
                 else: doWorkRawSearch(sys_argv[1], gplaintext)
             except:
-                print "Exception with sample %s" % sys_argv[1]
-            print "revealpe: End"
-            print "--------------------------------------------------------------------------------"
+                raise
+                print("Exception with sample %s" % sys_argv[1])
+            print("revealpe: End")
+            print("--------------------------------------------------------------------------------")
         else:
             for e in recurfiles(sys_argv[1]):
                 if sys_argv[2] in e:                
-                    print "revealpe: Analyzing %s" % e
-                    print "--------------------------------------------------------------------------------"
+                    print("revealpe: Analyzing %s" % e)
+                    print("--------------------------------------------------------------------------------")
                     try:
                         if not gplaintext: doWorkPESearch(e)
                         else: doWorkRawSearch(e, gplaintext)
                     except:
-                        print "Exception with sample %s" % e
-                    print "revealpe: End"
-                    print "--------------------------------------------------------------------------------"
+                        raise
+                        print("Exception with sample %s" % e)
+                    print("revealpe: End")
+                    print("--------------------------------------------------------------------------------")
                     if glog: flog.flush() 
     else:
-        print "revealpe: File not found"
-    print "revealpe end"
+        print("revealpe: File not found")
+    print("revealpe end")
 
     if glog: flog.close()
 
