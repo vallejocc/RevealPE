@@ -9,9 +9,9 @@
 import sys
 import os
 import pefile
-import vigenere_attack
-import xoradd_attack
-import decryptors
+from . import vigenere_attack
+from . import xoradd_attack
+from . import decryptors
 
 ########################################################################################################################################
 
